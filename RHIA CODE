@@ -1,0 +1,104 @@
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = "https://cptntqiiriycmxfaqwdt.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwdG50cWlpcml5Y214ZmFxd2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0ODkxNTgsImV4cCI6MjA2MTA2NTE1OH0.Mt-0TMmojUl9_7aX4sbb46wc9yy7cHtEkmet0ibCseo";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export default function CreateMission() {
+  const [mission, setMission] = useState({
+    title: "",
+    contract: "",
+    location: "",
+    urgency: "",
+    degree: "",
+    skills: "",
+    salary: "",
+    description: "",
+  });
+
+  const [missions, setMissions] = useState([]);
+
+  useEffect(() => {
+    fetchMissions();
+  }, []);
+
+  const fetchMissions = async () => {
+    const { data, error } = await supabase.from("missions").select("*").order("created_at", { ascending: false });
+    if (!error) {
+      setMissions(data);
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setMission({ ...mission, [name]: value });
+  };
+
+  const handleSubmit = async () => {
+    const { data, error } = await supabase.from("missions").insert([mission]);
+    if (!error) {
+      setMissions([mission, ...missions]);
+      setMission({
+        title: "",
+        contract: "",
+        location: "",
+        urgency: "",
+        degree: "",
+        skills: "",
+        salary: "",
+        description: "",
+      });
+      alert("Mission enregistrée avec succès !");
+    } else {
+      alert("Erreur lors de l'enregistrement de la mission.");
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto mt-10 p-4">
+      <h1 className="text-3xl font-bold mb-6">RHIA EXPERT - Gestion des missions de recrutement</h1>
+
+      <Card className="mb-8">
+        <CardContent className="space-y-4 p-6">
+          <h2 className="text-xl font-semibold">Créer une nouvelle mission</h2>
+          <Input name="title" placeholder="Titre du poste" value={mission.title} onChange={handleChange} />
+          <Input name="contract" placeholder="Type de contrat" value={mission.contract} onChange={handleChange} />
+          <Input name="location" placeholder="Lieu de la mission" value={mission.location} onChange={handleChange} />
+          <Input name="urgency" placeholder="Niveau d'urgence (Ex: Urgent, Normal)" value={mission.urgency} onChange={handleChange} />
+          <Input name="degree" placeholder="Niveau de diplôme exigé" value={mission.degree} onChange={handleChange} />
+          <Textarea name="skills" placeholder="Compétences clés recherchées" value={mission.skills} onChange={handleChange} />
+          <Input name="salary" placeholder="Salaire proposé" value={mission.salary} onChange={handleChange} />
+          <Textarea name="description" placeholder="Description de la mission" value={mission.description} onChange={handleChange} />
+          <Button onClick={handleSubmit}>Créer la mission</Button>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold">Liste des missions enregistrées</h2>
+        {missions.length === 0 ? (
+          <p className="text-gray-600">Aucune mission enregistrée pour le moment.</p>
+        ) : (
+          missions.map((m, index) => (
+            <Card key={index} className="shadow-sm">
+              <CardContent className="p-4 space-y-2">
+                <h3 className="text-lg font-bold">{m.title}</h3>
+                <p><strong>Type de contrat :</strong> {m.contract}</p>
+                <p><strong>Lieu :</strong> {m.location}</p>
+                <p><strong>Urgence :</strong> {m.urgency}</p>
+                <p><strong>Niveau requis :</strong> {m.degree}</p>
+                <p><strong>Salaire :</strong> {m.salary}</p>
+                <p><strong>Compétences :</strong> {m.skills}</p>
+                <p><strong>Description :</strong> {m.description}</p>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
